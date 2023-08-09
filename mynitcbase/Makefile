@@ -6,9 +6,8 @@ else
 	TARGET = nitcbase
 	BUILD_DIR = ./build
 endif
+
 SUBDIR = FrontendInterface Frontend Algebra Schema BlockAccess BPlusTree Cache Buffer Disk_Class
-
-
 
 HEADERS = $(wildcard define/*.h $(foreach fd, $(SUBDIR), $(fd)/*.h))
 SRCS = $(wildcard main.cpp $(foreach fd, $(SUBDIR), $(fd)/*.cpp))
@@ -19,11 +18,7 @@ $(TARGET): $(OBJS)
 
 $(BUILD_DIR)/%.o: %.cpp $(HEADERS)
 	mkdir -p $(@D)
-	g++ -std=c++11  $(CFLAGS) -o $@ -c $<
-
-clean:
-	rm -rf $(BUILD_DIR)/*
-
+	g++ -std=c++11 $(CFLAGS) -o $@ -c $<
 load:
 	@for dir in $(SUBDIR); do \
 		echo "Loading $$dir from stage $(stage) in parent directory..."; \
@@ -32,3 +27,6 @@ load:
 	done
 	rm -f ./main.cpp 
 	cp ./stage_$(stage)/main.cpp ./main.cpp \
+
+clean:
+	rm -rf $(BUILD_DIR)/*
