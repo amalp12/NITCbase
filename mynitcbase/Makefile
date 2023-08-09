@@ -8,11 +8,15 @@ else
 endif
 SUBDIR = FrontendInterface Frontend Algebra Schema BlockAccess BPlusTree Cache Buffer Disk_Class
 
-ifeq ($(shell test $(stage) -gt 0; echo $$?),0)
-    symlink_subdirectories:
-		@for dir in stage_$(stage)/$(SUBDIR); do \
+ifeq ($(shell test $(stage) -gt 0; echo $$?),0)	
+    symlink:
+		@rm main.cpp; \
+		ln -s stage_$(stage)/main.cpp main.cpp; \
+
+		@for dir in $(SUBDIR); do \
+			rm -r $$dir; \
             echo "Creating symbolic link for $$dir in parent directory..."; \
-            ln -s $$dir .; \
+            ln -s stage_$(stage)/$$dir $$dir; \
         done
 endif
 
