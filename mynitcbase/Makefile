@@ -6,8 +6,16 @@ else
 	TARGET = nitcbase
 	BUILD_DIR = ./build
 endif
-
 SUBDIR = FrontendInterface Frontend Algebra Schema BlockAccess BPlusTree Cache Buffer Disk_Class
+
+ifeq ($(shell test $(stage) -gt 0; echo $$?),0)
+    symlink_subdirectories:
+		@for dir in stage_$(stage)/$(SUBDIR); do \
+            echo "Creating symbolic link for $$dir in parent directory..."; \
+            ln -s $$dir .; \
+        done
+endif
+
 
 HEADERS = $(wildcard define/*.h $(foreach fd, $(SUBDIR), $(fd)/*.h))
 SRCS = $(wildcard main.cpp $(foreach fd, $(SUBDIR), $(fd)/*.cpp))

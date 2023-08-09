@@ -4,22 +4,24 @@
 #include "FrontendInterface/FrontendInterface.h"
 #include <iostream>
 
-int getNumberOfCatalogEntries(int blockNum){
-  int currBlockNum=blockNum;
-  int count=0;
+int getNumberOfCatalogEntries(int blockNum)
+{
+  int currBlockNum = blockNum;
+  int count = 0;
   unsigned char buffer[BLOCK_SIZE];
-  const int catalogNumberOfEntriesStart=32;
-  const int catalogRightBlockStart=12;
-  while(currBlockNum!=-1){
+  const int catalogNumberOfEntriesStart = 16;
+  const int catalogRightBlockStart = 12;
+  while (currBlockNum != -1)
+  {
     Disk::readBlock(buffer, blockNum);
-    count+=(int)(int32_t)*(buffer+catalogNumberOfEntriesStart*sizeof(unsigned char));
-    currBlockNum=(int)(int32_t)*(buffer+catalogRightBlockStart*sizeof(unsigned char));
+    count += (*(int32_t *)(buffer + catalogNumberOfEntriesStart * sizeof(unsigned char)));
+    currBlockNum = (*(int32_t *)(buffer + catalogRightBlockStart * sizeof(unsigned char)));
   }
   return count;
-
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   Disk disk_run;
 
   // create objects for the relation catalog and attribute catalog
@@ -34,9 +36,10 @@ int main(int argc, char *argv[]) {
   relCatBuffer.getHeader(&relCatHeader);
   attrCatBuffer.getHeader(&attrCatHeader);
 
-  int relationCount= getNumberOfCatalogEntries(RELCAT_BLOCK);
-  int attributeCount= getNumberOfCatalogEntries(ATTRCAT_BLOCK);
-  for (int i=0;i<relationCount;i++) {/* i = 0 to total relation count */
+  int relationCount = getNumberOfCatalogEntries(RELCAT_BLOCK);
+  int attributeCount = getNumberOfCatalogEntries(ATTRCAT_BLOCK);
+  for (int i = 0; i < relationCount; i++)
+  { /* i = 0 to total relation count */
 
     Attribute relCatRecord[RELCAT_NO_ATTRS]; // will store the record from the relation catalog
 
@@ -44,13 +47,15 @@ int main(int argc, char *argv[]) {
 
     printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
 
-    for (int j=0;i<attributeCount;j++) {/* j = 0 to number of entries in the attribute catalog */
+    for (int j = 0; j < attributeCount; j++)
+    { /* j = 0 to number of entries in the attribute catalog */
 
       // declare attrCatRecord and load the attribute catalog entry into it
       Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
       attrCatBuffer.getRecord(attrCatRecord, j);
-    
-      if (attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal == relCatRecord[RELCAT_REL_NAME_INDEX].sVal) {/* attribute catalog entry corresponds to the current relation */
+
+      if (strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal, relCatRecord[RELCAT_REL_NAME_INDEX].sVal) == 0)
+      { /* attribute catalog entry corresponds to the current relation */
         const char *attrType = attrCatRecord[ATTRCAT_ATTR_TYPE_INDEX].nVal == NUMBER ? "NUM" : "STR";
         printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrType);
       }

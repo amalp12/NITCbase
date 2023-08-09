@@ -11,7 +11,7 @@ BlockBuffer::BlockBuffer(int blockNum)
 
 // calls the parent class constructor
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
-
+/*
 // load the block header into the argument pointer
 int BlockBuffer::getHeader(struct HeadInfo *head)
 {
@@ -33,7 +33,8 @@ int BlockBuffer::getHeader(struct HeadInfo *head)
 
     return SUCCESS;
 }
-
+*/
+/*
 // load the record at slotNum into the argument pointer
 int RecBuffer::getRecord(union Attribute *rec, int slotNum)
 {
@@ -49,13 +50,13 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
     unsigned char buffer[BLOCK_SIZE];
     Disk::readBlock(buffer, this->blockNum);
 
-    /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
-       - each record will have size attrCount * ATTR_SIZE
-       - slotMap will be of size slotCount
-    */
+    // record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
+    //   - each record will have size attrCount * ATTR_SIZE
+    // - slotMap will be of size slotCount
+    
     int recordSize = attrCount * ATTR_SIZE;
     int slotNumRecordOffset = (HEADER_SIZE + slotCount) + (recordSize* slotNum);
-    /* calculate buffer + offset */;
+    // calculate buffer + offset 
     unsigned char *slotPointer = buffer + slotNumRecordOffset;
 
     // load the record into the rec data structure
@@ -64,3 +65,4 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
 
     return SUCCESS;
 }
+*/
