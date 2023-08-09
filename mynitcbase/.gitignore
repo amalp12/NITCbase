@@ -2,3 +2,12 @@ build
 nitcbase
 nitcbase-debug
 ../.vscode/
+./FrontendInterface
+./Frontend
+./Algebra
+./Schema
+./BlockAccess
+./BPlusTree
+./Cache
+./Buffer
+./Disk_Class
