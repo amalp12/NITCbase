@@ -27,8 +27,8 @@ clean:
 load:
 	@for dir in $(SUBDIR); do \
 		echo "Loading $$dir from stage $(stage) in parent directory..."; \
-		rm -r ./$$dir; \
-		cp -r ./stage_$(stage)/$$dir ./$$dir; \
+		rm -rf ./$$dir; \
+		cp -rf ./stage_$(stage)/$$dir ./$$dir; \
 	done
-	rm -r ./main.cpp 
-	cp -P ./stage_$(stage)/main.cpp ./main.cpp \
+	rm -f ./main.cpp 
+	cp ./stage_$(stage)/main.cpp ./main.cpp \
