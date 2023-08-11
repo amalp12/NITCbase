@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
 
           printf("  %s: %s\n", attrName, attrType);
   */
-  int catalouges[] = {RELCAT_RELID, ATTRCAT_RELID};
-  const int catalougesSize = 2;
+  int catalouges[] = {RELCAT_RELID, ATTRCAT_RELID, 2};
+  const int catalougesSize = 3;
   for (int i = 0; i < catalougesSize; i++)
   {
     // get the relation catalog entry using RelCacheTable::getRelCatEntry()

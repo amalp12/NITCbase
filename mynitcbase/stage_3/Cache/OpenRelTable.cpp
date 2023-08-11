@@ -31,6 +31,7 @@ OpenRelTable::OpenRelTable()
   RelCacheTable::relCache[RELCAT_RELID] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
   *(RelCacheTable::relCache[RELCAT_RELID]) = relCacheEntry;
 
+
   /**** setting up Attribute Catalog relation in the Relation Cache Table ****/
 
   // set up the relation cache entry for the attribute catalog similarly
@@ -39,13 +40,26 @@ OpenRelTable::OpenRelTable()
   relCatBlock.getRecord(relCatRecord, RELCAT_SLOTNUM_FOR_ATTRCAT);
 
   RelCacheTable::recordToRelCatEntry(relCatRecord, &relCacheEntry.relCatEntry);
-  relCacheEntry.recId.block = ATTRCAT_BLOCK;
+  relCacheEntry.recId.block = RELCAT_BLOCK;
   relCacheEntry.recId.slot = RELCAT_SLOTNUM_FOR_ATTRCAT;
 
   // set the value at RelCacheTable::relCache[ATTRCAT_RELID]
   // allocate this on the heap because we want it to persist outside this function
   RelCacheTable::relCache[ATTRCAT_RELID] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
   *(RelCacheTable::relCache[ATTRCAT_RELID]) = relCacheEntry;
+
+
+  /// student in relation catalog
+
+  relCatBlock.getRecord(relCatRecord, RELCAT_SLOTNUM_FOR_ATTRCAT+1);
+
+  RelCacheTable::recordToRelCatEntry(relCatRecord, &relCacheEntry.relCatEntry);
+  relCacheEntry.recId.block = RELCAT_BLOCK;
+  relCacheEntry.recId.slot = RELCAT_SLOTNUM_FOR_ATTRCAT+1;
+
+  RelCacheTable::relCache[ATTRCAT_RELID+1] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
+  *(RelCacheTable::relCache[ATTRCAT_RELID+1]) = relCacheEntry;
+  // student in relation catalog end
 
   /************ Setting up Attribute cache entries ************/
   // (we need to populate attribute cache with entries for the relation catalog
@@ -98,6 +112,33 @@ OpenRelTable::OpenRelTable()
     currAttrCacheEntry->recId.slot = j;
   }
   AttrCacheTable::attrCache[ATTRCAT_RELID] = attrLinkedListHead; // head of the linked list
+  attrLinkedListHead = nullptr;
+
+
+  // add student attributes to attribute catalog
+  for (int j = 12; j < 18; j++)
+  {
+    if (attrLinkedListHead == nullptr)
+    {
+      attrLinkedListHead = (struct AttrCacheEntry *)malloc(sizeof(AttrCacheEntry));
+      currAttrCacheEntry = attrLinkedListHead;
+    }
+    else
+    {
+      currAttrCacheEntry->next = (struct AttrCacheEntry *)malloc(sizeof(AttrCacheEntry));
+      currAttrCacheEntry = currAttrCacheEntry->next;
+    }
+    attrCatBlock.getRecord(attrCatRecord, j);
+    AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &currAttrCacheEntry->attrCatEntry);
+
+    currAttrCacheEntry->recId.block = ATTRCAT_BLOCK;
+    currAttrCacheEntry->recId.slot = j;
+  }
+  AttrCacheTable::attrCache[ATTRCAT_RELID+1] = attrLinkedListHead; // head of the linked list
+
+  // add student attributes to attribute catalog end
+
+
 
   // iterate through all the attributes of the relation catalog and create a linked
   // list of AttrCacheEntry (slots 0 to 5)
