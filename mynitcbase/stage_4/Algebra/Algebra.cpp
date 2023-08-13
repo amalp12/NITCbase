@@ -108,7 +108,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         }
 
         printf(" %s |", attrCatEntry.attrName);
-        printf(" %s |", attrCatEntry.attrType == NUMBER ? "NUMBER" : "STRING");
+        // printf(" %s |", attrCatEntry.attrType == NUMBER ? "NUMBER" : "STRING");
         
     }
     printf("\n");
@@ -146,13 +146,14 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
                 if (attrCatEntry.attrType == NUMBER)
                 {
-                    printf(" %f |", recordEntry[i].nVal);
+                    printf(" %d |", (int) recordEntry[i].nVal);
                 }
                 else
                 {
                     printf(" %s |", recordEntry[i].sVal);
                 }
             }
+            printf("\n");
         }
         else
         {
