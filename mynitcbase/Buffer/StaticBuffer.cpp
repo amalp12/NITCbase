@@ -10,6 +10,10 @@ StaticBuffer::StaticBuffer() {
   // initialise all blocks as free
   for (int bufferIndex = 0;bufferIndex< BUFFER_CAPACITY;bufferIndex++) {
     metainfo[bufferIndex].free = true;
+    metainfo[bufferIndex].blockNum = -1;
+    metainfo[bufferIndex].dirty = -1;
+    metainfo[bufferIndex].timeStamp = -1;
+
   }
 }
 

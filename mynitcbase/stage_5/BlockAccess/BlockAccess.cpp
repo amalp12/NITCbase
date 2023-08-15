@@ -10,15 +10,19 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
     RecId prevRecId;
     response = RelCacheTable::getSearchIndex(relId, &prevRecId);
     // if the response is not SUCCESS, return the response
-    if (response != SUCCESS){
-        printf("Invalid Search Index.\n");
-        exit(1);
-    }
-
-
+    // if (response != SUCCESS){
+    //     printf("Invalid Search Index.\n");
+    //     exit(1);
+    // }
 
     RelCatEntry relCatEntry;
     response = RelCacheTable::getRelCatEntry(relId, &relCatEntry);
+    if(response != SUCCESS){
+        printf("Relation Catalogue Entry Not found.\n");
+        exit(1);
+    }
+    // get the relation catalog entry using RelCacheTable::getRelCatEntry()
+
     // let block and slot denote the record id of the record being currently checked
     int block=-1, slot=-1;
     // if the current search index record is invalid(i.e. both block and slot = -1)
@@ -40,9 +44,22 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
         // the record next to the search index record)
 
         // block = search index's block
-        block = prevRecId.block;
-        // slot = search index's slot + 1
-        slot = prevRecId.slot + 1;
+        if(slot>=relCatEntry.numAttrs){
+            HeadInfo head;
+            RecBuffer recBuffer(prevRecId.block);
+            response = recBuffer.getHeader(&head);
+            block = head.rblock;
+            slot = 0;
+            if(block==-1){
+                block=relCatEntry.firstBlk;
+            }
+
+        }
+        else{
+            block = prevRecId.block;
+            // slot = search index's slot + 1
+            slot = prevRecId.slot + 1;
+        }
     }
 
     /* The following code searches for the next record in the relation
@@ -64,7 +81,6 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
             printf("Record not found.\n");
             exit(1);
         }
-
 
         // get header of the block using RecBuffer::getHeader() function
         struct HeadInfo head;
@@ -108,6 +124,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
         AttrCatEntry attrCatEntry;
         response = AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
         if(response != SUCCESS){
+            // TODO Make it linked list if needed
             printf("Attribute Catalogue Entry Not found.\n");
             exit(1);
         }

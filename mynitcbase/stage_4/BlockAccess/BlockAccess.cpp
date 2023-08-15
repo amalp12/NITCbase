@@ -7,7 +7,11 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
     // get the previous search index of the relation relId from the relation cache
     // (use RelCacheTable::getSearchIndex() function)
     int response;
+    int block=-1, slot=-1;
     RecId prevRecId;
+    prevRecId.block = -1;
+    prevRecId.slot = -1;
+
     response = RelCacheTable::getSearchIndex(relId, &prevRecId);
     // if the response is not SUCCESS, return the response
     if (response != SUCCESS){
@@ -20,7 +24,6 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
     RelCatEntry relCatEntry;
     response = RelCacheTable::getRelCatEntry(relId, &relCatEntry);
     // let block and slot denote the record id of the record being currently checked
-    int block=-1, slot=-1;
     // if the current search index record is invalid(i.e. both block and slot = -1)
     if (prevRecId.block == -1 && prevRecId.slot == -1){
         // (no hits from previous search; search should start from the

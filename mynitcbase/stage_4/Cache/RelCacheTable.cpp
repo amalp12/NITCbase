@@ -55,6 +55,7 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
 NOTE: this function expects the caller to allocate memory for `*searchIndex`
 */
 int RelCacheTable::getSearchIndex(int relId, RecId* searchIndex) {
+  *searchIndex={-1,-1};
   // check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
   if(relId < 0 || relId >= MAX_OPEN) {
     return E_OUTOFBOUND;
