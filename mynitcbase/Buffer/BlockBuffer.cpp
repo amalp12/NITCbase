@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 #include <cstring>
-
+#include <iostream>
 
 // the declarations for these functions can be found in "BlockBuffer.h"
 
@@ -71,7 +71,7 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
     */
 
     int recordSize = attrCount * ATTR_SIZE;
-    int slotNumRecordOffset = (HEADER_SIZE + slotCount) + (recordSize* slotNum);
+    int slotNumRecordOffset = (HEADER_SIZE + slotCount) + (recordSize * slotNum);
     /* calculate buffer + offset */;
     unsigned char *slotPointer = bufferPtr + slotNumRecordOffset;
 
@@ -81,10 +81,74 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
     return SUCCESS;
 }
 
+int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
+    unsigned char *bufferPtr;
+    /* get the starting address of the buffer containing the block
+       using loadBlockAndGetBufferPtr(&bufferPtr). */
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+
+    // if loadBlockAndGetBufferPtr(&bufferPtr) != SUCCESS
+        // return the value returned by the call.
+    if (ret != SUCCESS){
+        return ret;
+    }
+
+    /* get the header of the block using the getHeader() function */
+    struct HeadInfo head;
+    ret = BlockBuffer::getHeader(&head);
+
+    // get number of attributes in the block.
+    int numberOfAttributes = head.numAttrs;
+
+    // get the number of slots in the block.
+    int numberOfSlots = head.numSlots;
+
+    // if input slotNum is not in the permitted range return E_OUTOFBOUND.
+    if (slotNum < 0 || slotNum >= numberOfSlots){
+        return E_OUTOFBOUND;
+    }
+
+    /* offset bufferPtr to point to the beginning of the record at required
+       slot. the block contains the header, the slotmap, followed by all
+       the records. so, for example,
+       record at slot x will be at bufferPtr + HEADER_SIZE + (x*recordSize)
+       copy the record from `rec` to buffer using memcpy
+       (hint: a record will be of size ATTR_SIZE * numAttrs)
+    */
+    int recordSize = numberOfAttributes * ATTR_SIZE;
+    int slotNumRecordOffset = (HEADER_SIZE + numberOfSlots) + (recordSize * slotNum);
+    unsigned char *slotPointer = bufferPtr + slotNumRecordOffset;
+    memcpy(slotPointer, rec, recordSize);
+
+    // update dirty bit using setDirtyBit()
+    ret = StaticBuffer::setDirtyBit(this->blockNum);
+    /* (the above function call should not fail since the block is already
+       in buffer and the blockNum is valid. If the call does fail, there
+       exists some other issue in the code) */
+    if (ret != SUCCESS){
+        printf("Error in setting dirty bit.\n");
+        exit(1);
+    }
+   
+    
+
+    // return SUCCESS
+    return SUCCESS;
+}
+
 /*
 Used to load a block to the buffer and get a pointer to it.
 NOTE: this function expects the caller to allocate memory for the argument
 */
+/* NOTE: This function will NOT check if the block has been initialised as a
+   record or an index block. It will copy whatever content is there in that
+   disk block to the buffer.
+   Also ensure that all the methods accessing and updating the block's data
+   should call the loadBlockAndGetBufferPtr() function before the access or
+   update is done. This is because the block might not be present in the
+   buffer due to LRU buffer replacement. So, it will need to be bought back
+   to the buffer before any operations can be done.
+ */
 int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
 {
     // check whether the block is already present in the buffer using StaticBuffer.getBufferNum()
@@ -92,14 +156,33 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
 
     if (bufferNum == E_BLOCKNOTINBUFFER)
     {
+        // get a free buffer using StaticBuffer.getFreeBuffer()
+
         bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
 
+        // if the call returns E_OUTOFBOUND, return E_OUTOFBOUND here as
+        // the blockNum is invalid
         if (bufferNum == E_OUTOFBOUND)
         {
             return E_OUTOFBOUND;
         }
 
         Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
+    }
+    else
+    {
+
+        // if present ,
+        // timestamps of all other occupied buffers in BufferMetaInfo.
+        for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++)
+        {
+            if (StaticBuffer::metainfo[bufferIndex].free == false)
+            {
+                StaticBuffer::metainfo[bufferIndex].timeStamp++;
+            }
+        }
+        // set the timestamp of the corresponding buffer to 0
+        StaticBuffer::metainfo[bufferNum].timeStamp = 0;
     }
 
     // store the pointer to this buffer (blocks[bufferNum]) in *buffPtr
@@ -137,7 +220,8 @@ int RecBuffer::getSlotMap(unsigned char *slotMap)
     return SUCCESS;
 }
 
-int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
+int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType)
+{
 
     double diff;
     // if attrType == STRING
@@ -145,9 +229,12 @@ int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
 
     // else
     //     diff = attr1.nval - attr2.nval
-    if(attrType == STRING) {
+    if (attrType == STRING)
+    {
         diff = strcmp(attr1.sVal, attr2.sVal);
-    } else {
+    }
+    else
+    {
         diff = attr1.nVal - attr2.nVal;
     }
 
@@ -156,11 +243,16 @@ int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
     if diff < 0 then return -1
     if diff = 0 then return 0
     */
-   if(diff > 0) {
-       return 1;
-   } else if(diff < 0) {
-       return -1;
-   } else {
-       return 0;
-   }
+    if (diff > 0)
+    {
+        return 1;
+    }
+    else if (diff < 0)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
 }
