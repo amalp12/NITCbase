@@ -305,6 +305,25 @@ int OpenRelTable::closeRel(int relId) {
   if (tableMetaInfo[relId].free) {
     return E_RELNOTOPEN;
   }
+  /****** Releasing the Relation Cache entry of the relation ******/
+if (RelCacheTable::relCache[relId]->dirty)/* RelCatEntry of the relId-th Relation Cache entry has been modified */
+  {
+
+    /* Get the Relation Catalog entry from RelCacheTable::relCache
+    Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
+    RelCatEntry relCatEntry = RelCacheTable::relCache[relId]->relCatEntry;
+    union Attribute record[RELCAT_NO_ATTRS];
+    RelCacheTable::relCatEntryToRecord(&relCatEntry, record);
+    RecId recId = RelCacheTable::relCache[relId]->recId;
+
+
+    // declaring an object of RecBuffer class to write back to the buffer
+    RecBuffer relCatBlock(recId.block);
+
+    // Write back to the buffer using relCatBlock.setRecord() with recId.slot
+    relCatBlock.setRecord(record, recId.slot);
+  }
+  /****** Releasing the Attribute Cache entry of the relation ******/
 
   // free the memory allocated in the relation and attribute caches which was
   // allocated in the OpenRelTable::openRel() function
