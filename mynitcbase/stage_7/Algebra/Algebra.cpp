@@ -216,6 +216,11 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
         // (use AttrCacheTable::getAttrCatEntry())
         AttrCatEntry attrCatEntry;
         response = AttrCacheTable::getAttrCatEntry(relId, i, &attrCatEntry);
+        if (response != SUCCESS)
+        {
+            printf("Could not get attribute.\n");
+            exit(1);
+        }
 
         // let type = attrCatEntry.attrType;
         int type = attrCatEntry.attrType;
@@ -245,7 +250,6 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
 
     // insert the record by calling BlockAccess::insert() function
     // let retVal denote the return value of insert call
-    int retVal = BlockAccess::insert(relId, recordValues);
+    return BlockAccess::insert(relId, recordValues);
 
-    return retVal;
 }
