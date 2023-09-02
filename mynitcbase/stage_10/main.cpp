@@ -19,7 +19,6 @@
 //   }
 //   return count;
 // }
-
 int main(int argc, char *argv[])
 {
   Disk disk_run;
@@ -106,6 +105,6 @@ int main(int argc, char *argv[])
     printf("\n");
   }
   */
-
+ compareCount=0;
   return FrontendInterface::handleFrontend(argc, argv);
 }

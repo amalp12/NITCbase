@@ -374,6 +374,7 @@ int OpenRelTable::closeRel(int relId)
   // update `relCache` and `attrCache` to set the entry at `relId` to nullptr
   RelCacheTable::relCache[relId] = nullptr;
   AttrCacheTable::attrCache[relId] = nullptr;
+   std::cout<<"Number of comparisons: "<<compareCount<<std::endl;
 
   return SUCCESS;
 }
