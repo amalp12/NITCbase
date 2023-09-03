@@ -637,7 +637,46 @@ int BlockAccess::insert(int relId, Attribute *record)
     relCatEntry.numRecs++;
     response = RelCacheTable::setRelCatEntry(relId, &relCatEntry);
 
-    return SUCCESS;
+    /* B+ Tree Insertions */
+    // (the following section is only relevant once indexing has been implemented)
+
+    int flag = SUCCESS;
+    // Iterate over all the attributes of the relation
+    // (let attrOffset be iterator ranging from 0 to numOfAttributes-1)
+    for (int attrOffset = 0; attrOffset < relCatEntry.numAttrs; attrOffset++)
+    {
+        // get the attribute catalog entry for the attribute from the attribute cache
+        // (use AttrCacheTable::getAttrCatEntry() with args relId and attrOffset)
+        AttrCatEntry attrCatEntry;
+        response = AttrCacheTable::getAttrCatEntry(relId, attrOffset, &attrCatEntry);
+
+        if (response != SUCCESS)
+        {
+            printf("Attribute Catalogue Entry Not found.\n");
+            exit(1);
+        }
+
+        // get the root block field from the attribute catalog entry
+        int rootBlk = attrCatEntry.rootBlock;
+
+        // if index exists for the attribute(i.e. rootBlock != -1)
+        if(rootBlk != -1)
+        {
+            /* insert the new record into the attribute's bplus tree using
+             BPlusTree::bPlusInsert()*/
+            response = BPlusTree::bPlusInsert(relId, attrCatEntry.attrName,
+                                                record[attrOffset], recId);
+
+            if (response == E_DISKFULL) {
+                //(index for this attribute has been destroyed)
+                // flag = E_INDEX_BLOCKS_RELEASED
+                flag = E_INDEX_BLOCKS_RELEASED;
+            }
+        }
+    }
+
+    return flag;
+
 }
 
 
@@ -857,10 +896,17 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
 
         // (the following part is only relevant once indexing has been implemented)
         // if index exists for the attribute (rootBlock != -1), call bplus destroy
-        // if (rootBlock != -1)
-        // {
+        if (rootBlock != -1)
+        {
             // delete the bplus tree rooted at rootBlock using BPlusTree::bPlusDestroy()
-        // }
+            response = BPlusTree::bPlusDestroy(rootBlock);
+            if (response != SUCCESS)
+            {
+                printf("Failed to destroy B+ tree.\n");
+                exit(1);
+            }
+
+        }
     }
 
     /*** Delete the entry corresponding to the relation from relation catalog ***/

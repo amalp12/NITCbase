@@ -361,10 +361,26 @@ int OpenRelTable::closeRel(int relId)
   RelCacheEntry *relCacheEntry = RelCacheTable::relCache[relId];
   AttrCacheEntry *attrCacheEntry = AttrCacheTable::attrCache[relId];
   AttrCacheEntry *tempAttrCacheEntry = attrCacheEntry;
-  // free all the linked list pointers
+  
   while (tempAttrCacheEntry != nullptr)
   {
+    // if the entry has been modified:
+    if(tempAttrCacheEntry->dirty)
+    {
+        /* Get the Attribute Catalog entry from attrCache
+          Then convert it to a record using AttrCacheTable::attrCatEntryToRecord().
+          Write back that entry by instantiating RecBuffer class. Use recId
+          member field and recBuffer.setRecord() */
+          AttrCatEntry attrCatEntry = tempAttrCacheEntry->attrCatEntry;
+          union Attribute record[ATTRCAT_NO_ATTRS];
+          AttrCacheTable::attrCatEntryToRecord(&attrCatEntry, record);
+          RecId recId = tempAttrCacheEntry->recId;
+          RecBuffer attrCatBlock(recId.block);
+          attrCatBlock.setRecord(record, recId.slot);
+    }
+    
     attrCacheEntry = attrCacheEntry->next;
+    // free all the linked list pointers
     free(tempAttrCacheEntry);
     tempAttrCacheEntry = attrCacheEntry;
   }
