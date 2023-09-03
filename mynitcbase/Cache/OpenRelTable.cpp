@@ -266,7 +266,7 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE])
   relCacheEntry->recId.block = recId.block;
   relCacheEntry->recId.slot = recId.slot;
   relCacheEntry->dirty = false;
-  relCacheEntry->searchIndex = recId;
+  relCacheEntry->searchIndex = {-1, -1};
 
   // allocate this on the heap because we want it to persist outside this function
   RelCacheTable::relCache[relId] = relCacheEntry;
@@ -304,7 +304,8 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE])
     currAttrCacheEntry->recId.block = recId.block;
     currAttrCacheEntry->recId.slot = recId.slot;
     currAttrCacheEntry->dirty = false;
-    // currAttrCacheEntry->searchIndex = indexId;
+    currAttrCacheEntry->searchIndex = {-1, -1};
+
 
     recId = BlockAccess::linearSearch(ATTRCAT_RELID, relNameAttrConst, relNameAttr, EQ);
   }

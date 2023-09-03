@@ -67,6 +67,9 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             /* (all the entries in the block has been searched; search from the
             beginning of the next leaf index block. */
 
+            // block = rblock of leafHead.
+            block = leafHead.rblock;
+            index = 0;
             // update block to rblock of current block and index to 0.
 
             if (block == -1) {
@@ -156,6 +159,10 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
                 // move to the right child of the last entry of the block
                 // i.e numEntries - 1 th entry of the block
                 response = internalBlk.getEntry (&intEntry, intHead.numEntries - 1);
+                if (response != SUCCESS) {
+                    printf("failed to get entry %d of block %d\n", intHead.numEntries - 1, block);
+                    exit(1);
+                }
 
                  // right child of last entry
                 block =  intEntry.rChild;
@@ -201,6 +208,12 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
                 // set search index to {block, index}
                 searchIndex.block = block;
                 searchIndex.index = index;
+                response = AttrCacheTable::setSearchIndex(relId, attrName, &searchIndex);
+                if(response!=SUCCESS){
+                    printf("failed to set search index for %s\n", attrName);
+                    exit(1);
+                }
+
 
 
                 // return the recId {leafEntry.block, leafEntry.slot}.
@@ -215,7 +228,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             }
 
             // search next index.
-            ++index;
+            index++;
         }
 
         /*only for NE operation do we have to check the entire linked list;
