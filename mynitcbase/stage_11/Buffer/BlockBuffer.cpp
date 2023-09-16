@@ -506,7 +506,7 @@ void BlockBuffer::releaseBlock(){
         // free the block in disk by setting the data type of the entry
         // corresponding to the block number in StaticBuffer::blockAllocMap
         // to UNUSED_BLK.
-        StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
+        StaticBuffer::blockAllocMap[this->blockNum] = (unsigned char) UNUSED_BLK;
 
         // set the object's blockNum to INVALID_BLOCK (-1)
         this->blockNum = E_INVALIDBLOCK;

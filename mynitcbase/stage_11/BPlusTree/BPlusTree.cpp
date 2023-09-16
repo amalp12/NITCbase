@@ -429,6 +429,12 @@ int BPlusTree::bPlusDestroy(int rootBlockNum) {
         of the first entry and rChild of all entries using BPlusTree::bPlusDestroy().
         (the rchild of an entry is the same as the lchild of the next entry.
          take care not to delete overlapping children more than once ) */
+        InternalEntry internalEntry;
+        response = internalBlk.getEntry(&internalEntry, 0);
+        // (destroy the lChild of the first entry)
+        response = bPlusDestroy(internalEntry.lChild);
+
+
         for (int i = 0; i < headInfo.numEntries; i++) {
             // declare an instance of InternalEntry to store the entry
             // using IndInternal::getEntry().
@@ -440,21 +446,8 @@ int BPlusTree::bPlusDestroy(int rootBlockNum) {
                 exit(1);
             }
 
-            if (i == 0) {
-                // (destroy the lChild of the first entry)
-                response = bPlusDestroy(internalEntry.lChild);
-                if (response != SUCCESS) {
-                    printf("failed to destroy lChild of entry %d of block %d\n", i, rootBlockNum);
-                    exit(1);
-                }
-            }
-
             // (destroy the rChild of the entry)
             response = bPlusDestroy(internalEntry.rChild);
-            if (response != SUCCESS) {
-                printf("failed to destroy rChild of entry %d of block %d\n", i, rootBlockNum);
-                exit(1);
-            }
         }
 
 
