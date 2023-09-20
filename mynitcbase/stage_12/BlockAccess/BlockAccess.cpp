@@ -724,11 +724,11 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
 
     /* get the first record block of the relation (firstBlock) using the
        relation catalog entry record */
-    int firstBlock = relCatEntryRecord[RELCAT_FIRST_BLOCK_INDEX].nVal;
+    int firstBlock =(int) relCatEntryRecord[RELCAT_FIRST_BLOCK_INDEX].nVal;
 
     /* get the number of attributes corresponding to the relation (numAttrs)
        using the relation catalog entry record */
-    int numAttrs = relCatEntryRecord[RELCAT_NO_ATTRIBUTES_INDEX].nVal;
+    int numAttrs = (int) relCatEntryRecord[RELCAT_NO_ATTRIBUTES_INDEX].nVal;
 
     /*
      Delete all the record blocks of the relation
@@ -758,19 +758,20 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
 
 
     // reset the searchIndex of the attribute catalog
+    RelCacheTable::resetSearchIndex(ATTRCAT_RELID);
 
+    char constRelNameAttr[] = ATTRCAT_ATTR_RELNAME;
     int numberOfAttributesDeleted = 0;
 
     while (true)
     {
         RecId attrCatRecId;
         // attrCatRecId = linearSearch on attribute catalog for RelName = relNameAttr
-        char constRelNameAttr[] = ATTRCAT_ATTR_RELNAME;
         attrCatRecId = BlockAccess::linearSearch(ATTRCAT_RELID, constRelNameAttr, relNameAttr, EQ);
 
         // if no more attributes to iterate over (attrCatRecId == {-1, -1})
         //     break;
-        if (attrCatRecId.block == -1 && attrCatRecId.slot == -1)
+        if (attrCatRecId.block == -1 || attrCatRecId.slot == -1)
         {
             break;
         }

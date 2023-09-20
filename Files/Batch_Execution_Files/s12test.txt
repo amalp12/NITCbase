@@ -1,0 +1,56 @@
+echo ----Creating new relations----
+CREATE TABLE Events(id NUM, title STR, location STR);
+CREATE TABLE Locations(name STR, capacity NUM);
+CREATE TABLE Participants(regNo NUM, event STR);
+echo ----populating new relations----
+OPEN TABLE Events;
+INSERT INTO Events VALUES FROM events.csv;
+OPEN TABLE Locations;
+INSERT INTO Locations VALUES FROM locations.csv;
+OPEN TABLE Participants;
+INSERT INTO Participants VALUES FROM participants.csv;
+echo --------------------------------------------
+echo ----JOINING----
+SELECT name FROM Locations JOIN Events INTO EventLocations WHERE Locations.name = Events.location;
+SELECT regNo, event FROM Participants JOIN Events INTO AudiPeople WHERE Participants.event = Events.title;
+ALTER TABLE RENAME AudiPeople COLUMN event TO eventName;
+SELECT regNo, event, location FROM Participants JOIN Events INTO TempLocation WHERE Participants.event = Events.title;
+OPEN TABLE TempLocation;
+SELECT regNo, event, capacity FROM  Locations JOIN TempLocation INTO TempMiniEventP1 WHERE Locations.name = TempLocation.location;
+OPEN TABLE TempMiniEventP1;
+SELECT regNo, event, capacity FROM TempMiniEventP1 INTO TempMiniEventP2 WHERE capacity > 100;
+OPEN TABLE TempMiniEventP2;
+SELECT regNo, event FROM TempMiniEventP2 INTO MiniEventPeople WHERE capacity < 200;
+ALTER TABLE RENAME MiniEventPeople COLUMN event TO eventName;
+echo ----DROPPING TEMPORARY RELATIONS----
+CLOSE TABLE TempMiniEventP1;
+CLOSE TABLE TempLocation;
+CLOSE TABLE TempMiniEventP2;
+DROP TABLE TempMiniEventP1;
+DROP TABLE TempLocation;
+DROP TABLE TempMiniEventP2;
+echo ----Queston 3 ------
+echo ----Creating new relations----
+CREATE TABLE Organizers(name STR, eventId NUM);
+OPEN TABLE Organizers;
+INSERT INTO Organizers values from organizers.csv;
+SELECT regNo, event, location, id FROM Participants JOIN Events INTO TempPart1 WHERE Participants.event = Events.title;
+OPEN TABLE TempPart1;
+SELECT regNo, eventId, event, location, name FROM Organizers JOIN TempPart1 INTO PartData WHERE Organizers.eventId = TempPart1.id;
+echo ----DROPPING TEMPORARY RELATIONS----
+CLOSE TABLE TempPart1;
+DROP TABLE TempPart1;
+echo ----Queston 3 Thomas part ------
+echo ----Creating new relations----
+SELECT eventId FROM Organizers INTO TomEventIds WHERE name = Thomas;
+OPEN TABLE TomEventIds;
+SELECT eventId, title FROM TomEventIds JOIN Events INTO ThomasEvents WHERE TomEventIds.eventId = Events.id;
+OPEN TABLE ThomasEvents;
+SELECT regNo, eventId, event FROM Participants JOIN ThomasEvents INTO ThomasParts WHERE Participants.event = ThomasEvents.title;
+ALTER TABLE RENAME ThomasParts COLUMN event TO eventName;
+echo ----DROPPING TEMPORARY RELATIONS----
+CLOSE TABLE TomEventIds;
+CLOSE TABLE ThomasEvents;
+DROP TABLE TomEventIds;
+DROP TABLE ThomasEvents;
+echo ---Done---
