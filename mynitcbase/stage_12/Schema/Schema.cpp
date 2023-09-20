@@ -86,7 +86,7 @@ int Schema::createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int att
     strcpy(relNameAsAttribute.sVal, relName);
 
     // declare a variable targetRelId of type RecId
-    RecId targetRelId;
+    RecId targetRecId={1,-1};
 
     // Reset the searchIndex using RelCacheTable::resetSearhIndex()
     RelCacheTable::resetSearchIndex(RELCAT_RELID);
@@ -95,12 +95,12 @@ int Schema::createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int att
     // for attribute value attribute "RelName" = relNameAsAttribute using
     // BlockAccess::linearSearch() with OP = EQ
     char relNameConst[] = RELCAT_ATTR_RELNAME;
-    targetRelId = BlockAccess::linearSearch(RELCAT_RELID, relNameConst, relNameAsAttribute, EQ);
+    targetRecId = BlockAccess::linearSearch(RELCAT_RELID, relNameConst, relNameAsAttribute, EQ);
 
     // if a relation with name `relName` already exists  ( linearSearch() does
     //                                                     not return {-1,-1} )
     //     return E_RELEXIST;
-    if(targetRelId.block != -1 || targetRelId.slot != -1){
+    if(targetRecId.block != -1 || targetRecId.slot != -1){
         return E_RELEXIST;
     }
 

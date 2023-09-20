@@ -8,7 +8,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
     // get the previous search index of the relation relId from the relation cache
     // (use RelCacheTable::getSearchIndex() function)
     int response;
-    RecId prevRecId;
+    RecId prevRecId={-1,-1};
     response = RelCacheTable::getSearchIndex(relId, &prevRecId);
     // if the response is not SUCCESS, return the response
     // if (response != SUCCESS){
@@ -700,12 +700,13 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
     strcpy(relNameAttr.sVal, relName);
 
     //  linearSearch on the relation catalog for RelName = relNameAttr
-    const char relcatAttrName[] = RELCAT_ATTR_RELNAME;
-    RecId recId = BlockAccess::linearSearch(RELCAT_RELID, (char *) relcatAttrName, relNameAttr, EQ);
+    char relcatAttrName[] = RELCAT_ATTR_RELNAME;
+
+    RecId relCatRecId = BlockAccess::linearSearch(RELCAT_RELID, relcatAttrName, relNameAttr, EQ);
 
     // if the relation does not exist (linearSearch returned {-1, -1})
     //     return E_RELNOTEXIST
-    if (recId.block == -1 && recId.slot == -1)
+    if (relCatRecId.block == -1 && relCatRecId.slot == -1)
     {
         return E_RELNOTEXIST;
     }
@@ -713,8 +714,8 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
     Attribute relCatEntryRecord[RELCAT_NO_ATTRS];
     /* store the relation catalog record corresponding to the relation in
        relCatEntryRecord using RecBuffer.getRecord */
-    RecBuffer recBuffer(recId.block);
-    int response = recBuffer.getRecord(relCatEntryRecord, recId.slot);
+    RecBuffer relCatRecBuffer(relCatRecId.block);
+    int response = relCatRecBuffer.getRecord(relCatEntryRecord, relCatRecId.slot);
     if (response != SUCCESS)
     {
         printf("Record not found.\n");
@@ -764,8 +765,8 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
     {
         RecId attrCatRecId;
         // attrCatRecId = linearSearch on attribute catalog for RelName = relNameAttr
-        const char constRelNameAttr[] = ATTRCAT_ATTR_RELNAME;
-        attrCatRecId = BlockAccess::linearSearch(ATTRCAT_RELID, (char *) constRelNameAttr, relNameAttr, EQ);
+        char constRelNameAttr[] = ATTRCAT_ATTR_RELNAME;
+        attrCatRecId = BlockAccess::linearSearch(ATTRCAT_RELID, constRelNameAttr, relNameAttr, EQ);
 
         // if no more attributes to iterate over (attrCatRecId == {-1, -1})
         //     break;
@@ -868,18 +869,12 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
                    relation with the block number of the previous block. */
                 // (use RelCacheTable::getRelCatEntry() and
                 //  RelCacheTable::setRelCatEntry() functions)
-                RelCatEntry relCatEntry;
-                response = RelCacheTable::getRelCatEntry(ATTRCAT_RELID, &relCatEntry);
+               
+                relCatEntryRecord[RELCAT_LAST_BLOCK_INDEX].nVal = header.lblock;
+                response = relCatRecBuffer.setRecord(relCatEntryRecord, relCatRecId.slot);
                 if (response != SUCCESS)
                 {
                     printf("Failed to get relation catalogue entry.\n");
-                    exit(1);
-                }
-                relCatEntry.lastBlk = header.lblock;
-                response = RelCacheTable::setRelCatEntry(ATTRCAT_RELID, &relCatEntry);
-                if (response != SUCCESS)
-                {
-                    printf("Failed to set relation catalogue entry.\n");
                     exit(1);
                 }
 
@@ -911,7 +906,6 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
 
     /*** Delete the entry corresponding to the relation from relation catalog ***/
     // Fetch the header of Relcat block
-    RecBuffer relCatRecBuffer(RELCAT_BLOCK);
     HeadInfo relCatHeader;
     response = relCatRecBuffer.getHeader(&relCatHeader);
 
@@ -928,7 +922,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
         printf("Slotmap not found.\n");
         exit(1);
     }
-    relCatSlotMap[recId.slot] = SLOT_UNOCCUPIED;
+    relCatSlotMap[relCatRecId.slot] = SLOT_UNOCCUPIED;
     response = relCatRecBuffer.setSlotMap(relCatSlotMap);
     if (response != SUCCESS)
     {
