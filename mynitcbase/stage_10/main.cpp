@@ -12,13 +12,13 @@ int main(int argc, char *argv[])
 
   /* W/O Index
   # SELECT * FROM NumbersC INTO BigNumbersC WHERE key > 165000;
-  Number of comparisons: 166510
+  Number of comparisons: 166464
   Selected successfully into BigNumbersC
   */
 
  /*Indexed
  # SELECT * FROM Numbers INTO BigNumbers WHERE key > 165000;
-  Number of comparisons: 1719
+  Number of comparisons: 1529
   Selected successfully into BigNumbers
  */
  compareCount=0;

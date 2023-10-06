@@ -31,7 +31,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
     // declare variables block and index which will be used during search
     int block, index;
     /* searchIndex == {-1, -1}*/
-    if (searchIndex.block == -1 && searchIndex.index == -1){
+    if (searchIndex.block == -1 || searchIndex.index == -1){
         // (search is done for the first time)
 
         // start the search from the first entry of root.
@@ -139,9 +139,10 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
              Hint: the helper function compareAttrs() can be used for comparing
             */
            int index = 0;
-           while(index<MAX_KEYS_INTERNAL){
+           while(index<intHead.numEntries){
                 response = internalBlk.getEntry (&intEntry, index);
-                if (compareAttrs(intEntry.attrVal, attrVal, attrCatEntry.attrType) >= 0){
+                int cmpVal = compareAttrs(intEntry.attrVal, attrVal, attrCatEntry.attrType);
+                if (((op==EQ || op==GE) && cmpVal >= 0)|| (op==GT && cmpVal > 0)){
                      break;
                 }
                 index++;
@@ -150,7 +151,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             
 
             /* such an entry is found*/
-            if (index < MAX_KEYS_INTERNAL) {
+            if (index < intHead.numEntries) {
                 // move to the left child of that entry
                 // left child of the entry
                 block = intEntry.lChild;  
@@ -158,7 +159,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             } else {
                 // move to the right child of the last entry of the block
                 // i.e numEntries - 1 th entry of the block
-                response = internalBlk.getEntry (&intEntry, intHead.numEntries - 1);
+                response = internalBlk.getEntry(&intEntry, intHead.numEntries - 1);
                 if (response != SUCCESS) {
                     printf("failed to get entry %d of block %d\n", intHead.numEntries - 1, block);
                     exit(1);

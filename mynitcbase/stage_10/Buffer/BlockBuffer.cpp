@@ -39,6 +39,13 @@ BlockBuffer::BlockBuffer(char blockType){
 }
 BlockBuffer::BlockBuffer(int blockNum)
 {
+    // check if the blockNum is valid
+    if (blockNum < 0 || blockNum >= DISK_BLOCKS)
+    {
+        // if not, set the blockNum field of the object to E_OUTOFBOUND
+        this->blockNum = E_OUTOFBOUND;
+        return;
+    }
     // initialise this.blockNum with the argument
     this->blockNum = blockNum;
 }
@@ -185,6 +192,12 @@ NOTE: this function expects the caller to allocate memory for the argument
  */
 int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
 {
+    // check if block is valid
+    if(this->blockNum<0){
+        printf("Invalid block number.\n");
+        exit(1);
+    }
+
     // check whether the block is already present in the buffer using StaticBuffer.getBufferNum()
     int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
@@ -263,13 +276,13 @@ int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType)
 
     // else
     //     diff = attr1.nval - attr2.nval
-    compareCount++;
     if (attrType == STRING)
     {
         diff = strcmp(attr1.sVal, attr2.sVal);
     }
     else
     {
+        compareCount++;
         diff = attr1.nVal - attr2.nVal;
     }
 
@@ -352,8 +365,8 @@ int BlockBuffer::setBlockType(int blockType){
     *((int32_t *)bufferPtr) = blockType;
 
     // update the StaticBuffer::blockAllocMap entry corresponding to the
-    // object's block number to `blockType`.
-    StaticBuffer::blockAllocMap[this->blockNum] = blockType;
+    // object's block number to `blockType`. with appropriate typecasting.
+    StaticBuffer::blockAllocMap[this->blockNum] = (unsigned char)blockType;
 
     // update dirty bit by calling StaticBuffer::setDirtyBit()
     response = StaticBuffer::setDirtyBit(this->blockNum);
@@ -373,7 +386,8 @@ int BlockBuffer::getFreeBlock(int blockType){
     // of a free block in the disk.
     int freeBlock = -1;
     for (int blockNum = 0; blockNum < DISK_BLOCKS; blockNum++){
-        if (StaticBuffer::blockAllocMap[blockNum] == UNUSED_BLK){
+        int blockTypeInMap = (int32_t) StaticBuffer::blockAllocMap[blockNum];
+        if (blockTypeInMap == UNUSED_BLK){
             freeBlock = blockNum;
             break;
         }
@@ -400,6 +414,7 @@ int BlockBuffer::getFreeBlock(int blockType){
     head.numEntries = 0;
     head.numAttrs = 0;
     head.numSlots = 0;
+    head.blockType = blockType; // repeat
 
     int response = setHeader(&head);
 
@@ -493,7 +508,7 @@ void BlockBuffer::releaseBlock(){
         // free the block in disk by setting the data type of the entry
         // corresponding to the block number in StaticBuffer::blockAllocMap
         // to UNUSED_BLK.
-        StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
+        StaticBuffer::blockAllocMap[this->blockNum] = (unsigned char) UNUSED_BLK;
 
         // set the object's blockNum to INVALID_BLOCK (-1)
         this->blockNum = E_INVALIDBLOCK;
