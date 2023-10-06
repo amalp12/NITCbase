@@ -784,6 +784,9 @@ int BPlusTree::splitLeaf(int leafBlockNum, Index indices[]) {
   leftBlkHeader.numEntries = (MAX_KEYS_LEAF + 1) / 2;
   leftBlkHeader.rblock = rightBlkNum;
   leftBlk.setHeader(&leftBlkHeader);
+  // set the first 32 entries of leftBlk = the first 32 entries of indices array
+  // and set the first 32 entries of newRightBlk = the next 32 entries of
+  // indices array using IndLeaf::setEntry().
 
   for (int i = 0; i < leftBlkHeader.numEntries; ++i) {
     leftBlk.setEntry(indices + i, i);
@@ -841,7 +844,7 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBl
         if (!inserted && compareAttrs(internalEntries[indicesArrayIndex].attrVal, intEntry.attrVal, attrCatEntry.attrType) >= 0) {
             internalEntries[indicesArrayIndex + 1] = internalEntries[indicesArrayIndex];
             internalEntries[indicesArrayIndex] = intEntry;
-            internalEntries[indicesArrayIndex].lChild = internalEntries[indicesArrayIndex + 1].rChild;
+            internalEntries[indicesArrayIndex+1].lChild = internalEntries[indicesArrayIndex].rChild;
             indicesArrayIndex++;
             inserted = true;
         }
@@ -1047,22 +1050,24 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]) {
     //            (use StaticBuffer::getStaticBlockType())
     int type = StaticBuffer::getStaticBlockType(internalEntries[0].rChild);
     /* each child block of the new right block */
-    for (int i = 0; i < (MAX_KEYS_INTERNAL)/2 + 1; i++) {
+    for (int internalBlkEntryIndex = (MAX_KEYS_INTERNAL)/2 ; internalBlkEntryIndex <= MAX_KEYS_INTERNAL; internalBlkEntryIndex++) {
         // declare an instance of BlockBuffer to access the child block using
         // constructor 2
-        BlockBuffer childBlk(internalEntries[i + (MAX_KEYS_INTERNAL)/2].lChild);
+        BlockBuffer childBlk(internalEntries[internalBlkEntryIndex].rChild);
 
         // update pblock of the block to rightBlkNum using BlockBuffer::getHeader()
         HeadInfo childHeadInfo;
         response = childBlk.getHeader(&childHeadInfo);
 
         if (response != SUCCESS) {
-            printf("failed to get header for block %d\n", internalEntries[i + (MAX_KEYS_INTERNAL)/2].lChild);
+            printf("failed to get header for block %d\n", internalEntries[internalBlkEntryIndex].lChild);
             exit(1);
         }
         // and BlockBuffer::setHeader().
         childHeadInfo.pblock = rightBlkNum;
+        childBlk.setHeader(&childHeadInfo);
     }
+
 
     return rightBlkNum;
 }

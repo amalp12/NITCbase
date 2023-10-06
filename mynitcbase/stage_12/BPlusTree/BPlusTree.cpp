@@ -844,7 +844,7 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBl
         if (!inserted && compareAttrs(internalEntries[indicesArrayIndex].attrVal, intEntry.attrVal, attrCatEntry.attrType) >= 0) {
             internalEntries[indicesArrayIndex + 1] = internalEntries[indicesArrayIndex];
             internalEntries[indicesArrayIndex] = intEntry;
-            internalEntries[indicesArrayIndex].lChild = internalEntries[indicesArrayIndex + 1].rChild;
+            internalEntries[indicesArrayIndex+1].lChild = internalEntries[indicesArrayIndex].rChild;
             indicesArrayIndex++;
             inserted = true;
         }
